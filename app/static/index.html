@@ -1745,7 +1745,12 @@ print(response.json())
     function renderFeed(events) {
       const feed = document.getElementById('activityFeed');
       if (!events || events.length === 0) {
-        feed.innerHTML = `<p style="color: var(--text-muted); font-size: 0.78rem; text-align: center; padding: 1rem 0;">No recent events.</p>`;
+        feed.innerHTML = `
+          <div style="text-align: center; padding: 1.5rem 0.5rem; color: var(--text-muted); font-size: 0.78rem;">
+            <div style="margin-bottom: 0.35rem; font-weight: 600; color: var(--text-main);">📡 Stream Active</div>
+            <p style="margin-bottom: 0.25rem;">Waiting for file edits or git commits from your PC.</p>
+          </div>
+        `;
         return;
       }
       feed.innerHTML = events.map((e, index) => {

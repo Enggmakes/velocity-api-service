@@ -66,7 +66,25 @@ def get_recent_activity(
     if project:
         query = query.filter(ActivityEvent.project_name == project)
 
-    events = query.order_by(desc(ActivityEvent.timestamp)).limit(limit).all()
+    events = list(query.order_by(desc(ActivityEvent.timestamp)).limit(limit).all())
+    if not events:
+        hb_query = db.query(Heartbeat)
+        if not is_admin:
+            if api_key_id is not None:
+                hb_query = hb_query.filter(Heartbeat.api_key_id == api_key_id)
+            else:
+                hb_query = hb_query.filter(Heartbeat.api_key_id.is_(None))
+        recent_hbs = hb_query.order_by(desc(Heartbeat.timestamp)).limit(limit).all()
+        for hb in recent_hbs:
+            events.append(ActivityEvent(
+                id=hb.id,
+                source="focus_tracker",
+                event_type="focus_session",
+                project_name=hb.project_name,
+                sanitized_path=f"workspace/{hb.project_name}",
+                language=hb.language or "other",
+                timestamp=hb.timestamp
+            ))
     return events
 
 
