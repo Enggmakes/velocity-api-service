@@ -89,14 +89,14 @@ def get_window_title() -> str:
             pass
     elif sys.platform == "darwin":
         try:
-            cmd = "osascript -e 'tell application \"System Events\" to get name of first process whose frontmost is true'"
-            return subprocess.check_output(cmd, shell=True).decode("utf-8").strip()
+            cmd = ['osascript', '-e', 'tell application "System Events" to get name of first process whose frontmost is true']
+            return subprocess.check_output(cmd).decode("utf-8").strip()
         except Exception:
             pass
     elif sys.platform.startswith("linux"):
         try:
-            cmd = "xdotool getwindowfocus getwindowname"
-            return subprocess.check_output(cmd, shell=True).decode("utf-8").strip()
+            cmd = ['xdotool', 'getwindowfocus', 'getwindowname']
+            return subprocess.check_output(cmd).decode("utf-8").strip()
         except Exception:
             pass
     return ""
