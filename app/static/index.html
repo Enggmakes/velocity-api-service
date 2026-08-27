@@ -218,7 +218,7 @@
       display: flex;
       align-items: center;
       gap: 0.65rem;
-      width: 320px;
+      width: 440px;
       color: var(--text-light);
       font-size: 0.85rem;
     }
@@ -1394,6 +1394,16 @@ print(response.json())
       }
     }
 
+    function promptApiKey() {
+      const current = apiKeyInput.value.trim() || 'my_secure_telemetry_key_9f8d7e6c5b4a321';
+      const k = prompt('Paste your Velocity Master or Developer API Key:', current);
+      if (k && k.trim()) {
+        apiKeyInput.value = k.trim();
+        onKeyUpdated();
+        showToast('API Key applied!');
+      }
+    }
+
     function getHeaders() {
       const key = apiKeyInput.value.trim() || DEFAULT_KEY;
       return {
@@ -1505,8 +1515,12 @@ print(response.json())
         } else {
           document.getElementById('activityFeed').innerHTML = `
             <div style="text-align: center; padding: 1.25rem 0.5rem; color: var(--text-muted); font-size: 0.75rem;">
-              <p style="margin-bottom: 0.25rem; font-weight: 600;">Authentication Required</p>
-              <span>Paste your complete Master or Client API Key above to unlock the live feed.</span>
+              <p style="margin-bottom: 0.35rem; font-weight: 600; color: var(--text-main);">Authentication Required</p>
+              <p style="margin-bottom: 0.65rem;">Enter your complete API Key to view live feed.</p>
+              <button class="btn-create" style="display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.4rem 0.85rem; font-size: 0.75rem;" onclick="promptApiKey()">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 2l-2 2m-1.5 1.5L10 13m-3 3l-3 3 1 1 3-3m2-2l7.5-7.5M15 7l2 2"/></svg>
+                Enter API Key
+              </button>
             </div>
           `;
         }
