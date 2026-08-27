@@ -1352,13 +1352,27 @@ print(response.json())
       window.history.replaceState({}, document.title, window.location.pathname);
     }
 
-    apiKeyInput.value = storedKey;
+    function onKeyUpdated() {
+      const val = apiKeyInput.value.trim();
+      localStorage.setItem('telemetry_api_key', val);
+      fetchData(false);
+      fetchApiKeys();
+    }
 
     apiKeyInput.addEventListener('change', () => {
-      localStorage.setItem('telemetry_api_key', apiKeyInput.value.trim());
       showToast('Switched API Key: ' + (apiKeyInput.value.slice(0, 10) || 'None') + '...');
-      fetchData(true);
-      fetchApiKeys();
+      onKeyUpdated();
+    });
+
+    apiKeyInput.addEventListener('input', () => {
+      clearTimeout(window._keyDebounce);
+      window._keyDebounce = setTimeout(() => {
+        onKeyUpdated();
+      }, 400);
+    });
+
+    apiKeyInput.addEventListener('paste', () => {
+      setTimeout(onKeyUpdated, 50);
     });
 
     function showToast(msg) {
@@ -1488,6 +1502,13 @@ print(response.json())
         if (feedRes.ok) {
           cachedFeedEvents = await feedRes.json();
           renderFeed(cachedFeedEvents);
+        } else {
+          document.getElementById('activityFeed').innerHTML = `
+            <div style="text-align: center; padding: 1.25rem 0.5rem; color: var(--text-muted); font-size: 0.75rem;">
+              <p style="margin-bottom: 0.25rem; font-weight: 600;">Authentication Required</p>
+              <span>Paste your complete Master or Client API Key above to unlock the live feed.</span>
+            </div>
+          `;
         }
 
         // Update card preview
