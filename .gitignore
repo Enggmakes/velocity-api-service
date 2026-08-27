@@ -1,0 +1,22 @@
+# Python & Virtual Env
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+env/
+
+# Database & Telemetry Data (Zero-leak local DB)
+data/
+*.db
+*.sqlite
+*.sqlite3
+
+# Secrets & Environment variables
+.env
+.env.local
+
+# IDE & Logs
+.idea/
+.vscode/
+*.log

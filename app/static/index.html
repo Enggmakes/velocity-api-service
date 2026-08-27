@@ -1,0 +1,1812 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Velocity — Engineering Telemetry Platform</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-outer: #EAECEF;
+      --bg-main: #FFFFFF;
+      --bg-card: #FFFFFF;
+      --bg-subtle: #F8F9FA;
+      --bg-hover: #F1F3F5;
+      
+      --border-color: #E9ECEF;
+      --border-light: #F1F3F5;
+      
+      --primary-black: #111827;
+      --accent-green: #84CC16;
+      --accent-green-light: #ECFCCB;
+      --accent-green-dark: #65A30D;
+      --accent-orange: #FB923C;
+      --accent-orange-light: #FFEDD5;
+      --accent-blue: #3B82F6;
+      
+      --text-main: #111827;
+      --text-muted: #6B7280;
+      --text-light: #9CA3AF;
+      
+      --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-main);
+      color: var(--text-main);
+      font-family: var(--font-sans);
+      min-height: 100vh;
+      margin: 0;
+      padding: 0;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
+
+    /* Full-Screen App Frame */
+    .app-frame {
+      background: var(--bg-main);
+      border-radius: 0;
+      width: 100%;
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: 260px 1fr;
+      box-shadow: none;
+    }
+
+    /* Left Sidebar */
+    aside {
+      background: #FAFAFA;
+      border-right: 1px solid var(--border-color);
+      padding: 2rem 1.5rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      height: 100vh;
+      position: sticky;
+      top: 0;
+      overflow-y: auto;
+    }
+
+    .brand-title {
+      font-size: 1.35rem;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      color: var(--primary-black);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 2.25rem;
+      padding-left: 0.5rem;
+    }
+
+    .brand-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--accent-green);
+    }
+
+    .nav-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+      list-style: none;
+    }
+
+    .nav-link {
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+      padding: 0.75rem 1rem;
+      border-radius: 12px;
+      color: var(--text-muted);
+      font-size: 0.88rem;
+      font-weight: 600;
+      text-decoration: none;
+      transition: all 0.15s ease;
+      cursor: pointer;
+      position: relative;
+    }
+
+    .nav-link:hover {
+      background: var(--bg-hover);
+      color: var(--text-main);
+    }
+
+    .nav-link.active {
+      background: #FFFFFF;
+      color: var(--text-main);
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+      font-weight: 700;
+    }
+
+    .nav-link.active::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 25%;
+      height: 50%;
+      width: 3.5px;
+      background: var(--primary-black);
+      border-radius: 0 4px 4px 0;
+    }
+
+    .sidebar-card {
+      background: #FFFFFF;
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 1.25rem;
+      margin-top: 2rem;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02);
+    }
+
+    .sidebar-card-icon {
+      width: 32px;
+      height: 32px;
+      background: var(--primary-black);
+      color: #FFFFFF;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 0.75rem;
+    }
+
+    .sidebar-card h4 {
+      font-size: 0.85rem;
+      font-weight: 700;
+      margin-bottom: 0.25rem;
+    }
+
+    .sidebar-card p {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      line-height: 1.4;
+      margin-bottom: 0.85rem;
+    }
+
+    .btn-dark-sm {
+      background: var(--primary-black);
+      color: #FFFFFF;
+      border: none;
+      width: 100%;
+      padding: 0.55rem;
+      border-radius: 8px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 0.35rem;
+      transition: background 0.15s;
+    }
+
+    .btn-dark-sm:hover {
+      background: #2D3748;
+    }
+
+    /* Main Content Wrapper */
+    main {
+      padding: 1.75rem 2.25rem;
+      overflow-y: auto;
+      background: #FFFFFF;
+    }
+
+    /* Top Bar */
+    .top-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 2rem;
+      gap: 1rem;
+    }
+
+    .search-pill {
+      background: #F3F4F6;
+      border-radius: 9999px;
+      padding: 0.65rem 1.25rem;
+      display: flex;
+      align-items: center;
+      gap: 0.65rem;
+      width: 320px;
+      color: var(--text-light);
+      font-size: 0.85rem;
+    }
+
+    .search-pill input {
+      border: none;
+      background: transparent;
+      outline: none;
+      width: 100%;
+      color: var(--text-main);
+      font-family: inherit;
+      font-size: 0.85rem;
+    }
+
+    .header-user-section {
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+    }
+
+    .icon-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      border: 1px solid var(--border-color);
+      background: #FFFFFF;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      color: var(--text-muted);
+      transition: all 0.15s;
+    }
+
+    .icon-btn:hover {
+      background: var(--bg-subtle);
+      color: var(--text-main);
+    }
+
+    .user-pill {
+      display: flex;
+      align-items: center;
+      gap: 0.65rem;
+      padding: 0.35rem 0.85rem 0.35rem 0.35rem;
+      border-radius: 9999px;
+      border: 1px solid var(--border-color);
+      background: #FFFFFF;
+      font-size: 0.82rem;
+    }
+
+    .user-avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #A3E635, #65A30D);
+      color: #FFFFFF;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.8rem;
+    }
+
+    .btn-create {
+      background: #FFFFFF;
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+      padding: 0.6rem 1.1rem;
+      border-radius: 9999px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      transition: all 0.15s;
+    }
+
+    .btn-create:hover {
+      background: var(--bg-subtle);
+    }
+
+    /* Content Layout */
+    .content-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 1.75rem;
+    }
+
+    @media (max-width: 1200px) {
+      .content-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 900px) {
+      .app-frame {
+        grid-template-columns: 1fr;
+      }
+      aside {
+        height: auto;
+        position: relative;
+        border-right: none;
+        border-bottom: 1px solid var(--border-color);
+      }
+      main {
+        padding: 1.25rem;
+      }
+    }
+
+    .panel-card {
+      background: #FFFFFF;
+      border: 1px solid var(--border-color);
+      border-radius: 20px;
+      padding: 1.5rem;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+      margin-bottom: 1.5rem;
+    }
+
+    .panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.25rem;
+    }
+
+    .panel-title {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+
+    .badge-pill {
+      background: var(--bg-subtle);
+      border: 1px solid var(--border-color);
+      font-size: 0.72rem;
+      font-weight: 600;
+      padding: 0.25rem 0.65rem;
+      border-radius: 9999px;
+      color: var(--text-muted);
+      cursor: pointer;
+    }
+
+    .badge-pill:hover {
+      background: var(--bg-hover);
+    }
+
+    /* Hero Chart Panel */
+    .hero-analytics {
+      display: grid;
+      grid-template-columns: 2.2fr 1fr;
+      gap: 1.5rem;
+      padding: 1.5rem;
+    }
+
+    @media (max-width: 900px) {
+      .hero-analytics {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .hero-stat-large {
+      font-size: 2.2rem;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      color: var(--text-main);
+    }
+
+    .hero-sub {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      margin-bottom: 1.5rem;
+    }
+
+    /* Bar Chart */
+    .bar-chart-container {
+      display: flex;
+      align-items: flex-end;
+      gap: 1.25rem;
+      height: 180px;
+      padding-top: 1rem;
+    }
+
+    .chart-pillar {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      height: 100%;
+      justify-content: flex-end;
+      gap: 0.65rem;
+    }
+
+    .pillar-track {
+      width: 100%;
+      background: #F1F3F5;
+      border-radius: 10px;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      padding: 3px;
+      position: relative;
+      overflow: hidden;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .pillar-track:hover {
+      background: #E5E7EB;
+    }
+
+    .pillar-fill-green {
+      background: repeating-linear-gradient(
+        45deg,
+        #84CC16,
+        #84CC16 4px,
+        #A3E635 4px,
+        #A3E635 8px
+      );
+      border-radius: 8px;
+      width: 100%;
+      transition: height 0.4s ease;
+    }
+
+    .pillar-fill-orange {
+      background: var(--accent-orange);
+      border-radius: 0 0 8px 8px;
+      width: 100%;
+      height: 8px;
+      margin-top: 2px;
+    }
+
+    .pillar-label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--text-light);
+    }
+
+    /* Right Side Stats in Hero */
+    .hero-metrics-side {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding-left: 1.5rem;
+      border-left: 1px solid var(--border-light);
+    }
+
+    .metric-block {
+      margin-bottom: 1rem;
+    }
+
+    .metric-block-label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+
+    .metric-block-value {
+      font-size: 1.45rem;
+      font-weight: 800;
+      color: var(--text-main);
+      margin-top: 0.15rem;
+    }
+
+    .metric-badge-growth {
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: #65A30D;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.2rem;
+      margin-top: 0.2rem;
+    }
+
+    /* 2-Column Row */
+    .row-split {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    @media (max-width: 800px) {
+      .row-split {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .progress-track-striped {
+      height: 18px;
+      background: #F1F3F5;
+      border-radius: 9999px;
+      overflow: hidden;
+      margin: 1rem 0 0.5rem 0;
+      padding: 3px;
+    }
+
+    .progress-fill-striped {
+      height: 100%;
+      background: repeating-linear-gradient(
+        45deg,
+        #84CC16,
+        #84CC16 5px,
+        #A3E635 5px,
+        #A3E635 10px
+      );
+      border-radius: 9999px;
+      transition: width 0.4s ease;
+    }
+
+    /* 3-Column Bottom Analytics */
+    .triple-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 1.25rem;
+    }
+
+    @media (max-width: 1100px) {
+      .triple-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* Gauge */
+    .gauge-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      margin: 1rem 0;
+    }
+
+    .gauge-semi {
+      width: 140px;
+      height: 70px;
+      border-top-left-radius: 140px;
+      border-top-right-radius: 140px;
+      border: 16px solid #F1F3F5;
+      border-bottom: 0;
+      border-top-color: #84CC16;
+      border-left-color: #84CC16;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      position: relative;
+    }
+
+    .gauge-value {
+      font-size: 1.5rem;
+      font-weight: 800;
+      margin-top: 0.5rem;
+    }
+
+    /* Right Column */
+    .right-sidebar-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    .lime-card {
+      background: linear-gradient(135deg, #84CC16, #65A30D);
+      border-radius: 20px;
+      padding: 1.5rem;
+      color: #FFFFFF;
+      box-shadow: 0 10px 25px rgba(132, 204, 22, 0.25);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 2rem;
+    }
+
+    .card-chip {
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      opacity: 0.85;
+    }
+
+    .card-logo {
+      font-weight: 800;
+      font-size: 1rem;
+      letter-spacing: -0.02em;
+    }
+
+    .card-number {
+      font-family: var(--font-mono);
+      font-size: 1.15rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      margin-bottom: 1.5rem;
+    }
+
+    .card-bottom {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      font-size: 0.78rem;
+    }
+
+    /* Quick Action Icons */
+    .quick-actions-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0.75rem;
+      margin: 0.5rem 0;
+    }
+
+    .action-btn-circle {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.4rem;
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      color: var(--text-muted);
+      font-size: 0.72rem;
+      font-weight: 600;
+      transition: transform 0.15s;
+    }
+
+    .action-btn-circle:hover {
+      transform: translateY(-2px);
+    }
+
+    .circle-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      background: var(--bg-subtle);
+      border: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-main);
+      transition: all 0.15s;
+    }
+
+    .circle-icon:hover {
+      background: var(--primary-black);
+      color: #FFFFFF;
+      border-color: var(--primary-black);
+    }
+
+    /* Transaction-style Activity Feed */
+    .activity-feed-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      max-height: 380px;
+      overflow-y: auto;
+    }
+
+    .activity-feed-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.65rem 0.5rem;
+      border-radius: 10px;
+      border-bottom: 1px solid var(--border-light);
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .activity-feed-item:hover {
+      background: var(--bg-hover);
+    }
+
+    .feed-left {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .feed-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      background: #F1F3F5;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 0.75rem;
+    }
+
+    .feed-name {
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+
+    .feed-meta {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+    }
+
+    .feed-metric {
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-align: right;
+      color: var(--text-muted);
+    }
+
+    /* Developer Keys Table */
+    .keys-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.85rem;
+    }
+
+    .keys-table th {
+      text-align: left;
+      padding: 0.75rem 1rem;
+      color: var(--text-muted);
+      border-bottom: 1px solid var(--border-color);
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+    }
+
+    .keys-table td {
+      padding: 1rem;
+      border-bottom: 1px solid var(--border-color);
+      vertical-align: middle;
+    }
+
+    .key-badge-light {
+      font-family: var(--font-mono);
+      background: var(--bg-subtle);
+      border: 1px solid var(--border-color);
+      padding: 0.25rem 0.5rem;
+      border-radius: 6px;
+      font-weight: 600;
+      font-size: 0.78rem;
+    }
+
+    .btn-revoke {
+      background: #FEE2E2;
+      color: #DC2626;
+      border: 1px solid #FECACA;
+      padding: 0.35rem 0.75rem;
+      border-radius: 8px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .btn-revoke:hover {
+      background: #EF4444;
+      color: #FFFFFF;
+    }
+
+    /* Code Box */
+    .code-card-light {
+      background: #1E293B;
+      color: #F8FAFC;
+      border-radius: 12px;
+      padding: 1.25rem;
+      font-family: var(--font-mono);
+      font-size: 0.82rem;
+      margin-top: 1rem;
+      position: relative;
+    }
+
+    /* Modal */
+    .modal-backdrop {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0, 0, 0, 0.4);
+      backdrop-filter: blur(4px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+    }
+
+    .modal-box {
+      background: #FFFFFF;
+      border-radius: 20px;
+      padding: 2rem;
+      max-width: 520px;
+      width: 90%;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    }
+
+    .modal-input {
+      width: 100%;
+      background: #F9FAFB;
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+      padding: 0.75rem 1rem;
+      border-radius: 10px;
+      font-size: 0.88rem;
+      margin: 1rem 0;
+      font-family: inherit;
+    }
+
+    .modal-input:focus {
+      outline: none;
+      border-color: var(--primary-black);
+    }
+
+    /* Toast Notification */
+    .toast-msg {
+      position: fixed;
+      bottom: 2rem;
+      right: 2rem;
+      background: var(--primary-black);
+      color: #FFFFFF;
+      padding: 0.75rem 1.25rem;
+      border-radius: 10px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+      display: none;
+      z-index: 200;
+      animation: fadeIn 0.2s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Toast -->
+  <div id="toast" class="toast-msg">Notification</div>
+
+  <!-- Main App Shell -->
+  <div class="app-frame">
+    
+    <!-- Sidebar -->
+    <aside>
+      <div>
+        <div class="brand-title">
+          <div class="brand-dot"></div>
+          VELOCITY
+        </div>
+
+        <ul class="nav-list">
+          <li>
+            <a class="nav-link active" onclick="switchTab('dashboardTab', this)">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+              Dashboard
+            </a>
+          </li>
+          <li>
+            <a class="nav-link" onclick="switchTab('keysTab', this)">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 2l-2 2m-1.5 1.5L10 13m-3 3l-3 3 1 1 3-3m2-2l7.5-7.5M15 7l2 2"/></svg>
+              API Keys
+            </a>
+          </li>
+          <li>
+            <a class="nav-link" onclick="switchTab('docsTab', this)">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+              Documentation
+            </a>
+          </li>
+        </ul>
+      </div>
+
+      <!-- Bottom Card -->
+      <div class="sidebar-card">
+        <div class="sidebar-card-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        </div>
+        <h4>Local Telemetry</h4>
+        <p>100% private SQLite storage with zero external data leakage.</p>
+        <button class="btn-dark-sm" onclick="openCreateModal()">+ Create API Key</button>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main>
+      
+      <!-- Top Header -->
+      <div class="top-header">
+        <div class="search-pill">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" id="apiKeyInput" placeholder="Active API Key..." title="Enter your Master or Client API Key to switch tenants in real-time" />
+        </div>
+
+        <div class="header-user-section">
+          <button class="icon-btn" title="Refresh Live Data" onclick="fetchData(true)">
+            <svg id="refreshIcon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/></svg>
+          </button>
+          
+          <div class="user-pill">
+            <div class="user-avatar" id="avatarLetter">D</div>
+            <div style="padding-right: 0.5rem;">
+              <strong style="display: block; font-size: 0.78rem;" id="userTitle">Developer</strong>
+              <span style="color: var(--text-muted); font-size: 0.7rem;" id="tenantName">Personal Workspace</span>
+            </div>
+          </div>
+
+          <button class="btn-create" style="background: var(--accent-green-light); border-color: var(--accent-green); color: var(--accent-green-dark); font-weight: 700; display: inline-flex; align-items: center; gap: 0.4rem;" onclick="openStandupModal()" title="Generate AI Daily Standup">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+            AI Standup
+          </button>
+
+          <button class="btn-create" style="background: var(--primary-black); color: #FFFFFF; font-weight: 700; display: inline-flex; align-items: center; gap: 0.4rem;" onclick="openConnectModal()" title="1-Click Connect any PC to Velocity">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+            Connect PC
+          </button>
+
+          <button class="btn-create" onclick="openCreateModal()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Add Key
+          </button>
+        </div>
+      </div>
+
+      <!-- TAB 1: DASHBOARD VIEW -->
+      <div id="dashboardTab">
+        
+        <div class="content-grid">
+          
+          <!-- Left Large Area -->
+          <div>
+            
+            <!-- Hero Analytics Card -->
+            <div class="panel-card hero-analytics">
+              <div>
+                <div class="panel-header" style="margin-bottom: 0.5rem;">
+                  <span style="font-size: 0.85rem; font-weight: 700; color: var(--text-muted);">CODING ACTIVITY OVERVIEW</span>
+                  <div class="badge-pill" onclick="fetchData(true)">Live ▾</div>
+                </div>
+                <div class="hero-stat-large" id="todayActiveTime">0h 0m</div>
+                <div class="hero-sub" id="todayStatusText">Active dwell time recorded today</div>
+
+                <!-- Patterned Stacked Bar Chart -->
+                <div class="bar-chart-container" id="weeklyChart">
+                  <!-- Injected by JS -->
+                </div>
+              </div>
+
+              <!-- Side Metrics in Hero -->
+              <div class="hero-metrics-side">
+                <div class="metric-block">
+                  <div class="metric-block-label">Total Events</div>
+                  <div class="metric-block-value" id="todayEventsCount">0</div>
+                  <div class="metric-badge-growth">↗ Ingested today</div>
+                </div>
+
+                <div class="metric-block">
+                  <div class="metric-block-label">Commits & Pushes</div>
+                  <div class="metric-block-value" id="todayCommits">0</div>
+                  <div class="metric-badge-growth">↗ Across all repos</div>
+                </div>
+
+                <div class="metric-block">
+                  <div class="metric-block-label">Active Workspaces</div>
+                  <div class="metric-block-value" id="todayProjectsCount">0</div>
+                  <span style="font-size: 0.72rem; color: var(--text-muted);" id="todayProjectsList">None</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Middle Split Row -->
+            <div class="row-split">
+              
+              <!-- Daily Goal Progress (Interactive) -->
+              <div class="panel-card" style="margin-bottom: 0;">
+                <div class="panel-header">
+                  <span class="panel-title" style="font-size: 0.95rem;">Daily Goal Target</span>
+                  <span class="badge-pill" onclick="setCustomGoal()" title="Click to change daily goal target" id="goalTargetBadge">4.0h goal</span>
+                </div>
+                <div class="progress-track-striped">
+                  <div class="progress-fill-striped" id="dailyGoalBar" style="width: 5%;"></div>
+                </div>
+                <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--text-muted); font-weight: 600;">
+                  <span id="goalCurrent">0h logged</span>
+                  <span id="goalTargetLabel">Target: 4.0h</span>
+                </div>
+              </div>
+
+              <!-- Productivity Automation Tip -->
+              <div class="panel-card" style="margin-bottom: 0; background: #F8F9FA;">
+                <div class="panel-header">
+                  <span class="panel-title" style="font-size: 0.95rem;">Telemetry Automation</span>
+                </div>
+                <p style="font-size: 0.78rem; color: var(--text-muted); line-height: 1.4;">
+                  Run the background watcher daemon to automatically stream your coding sessions into SQLite.
+                </p>
+                <div style="margin-top: 0.75rem;">
+                  <code style="font-family: var(--font-mono); font-size: 0.72rem; background: #FFFFFF; padding: 0.25rem 0.5rem; border-radius: 6px; border: 1px solid var(--border-color);">python cli.py watch</code>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- Triple Analytics Grid -->
+            <div class="triple-grid" style="margin-top: 1.5rem;">
+              
+              <!-- Language Breakdown -->
+              <div class="panel-card" style="margin-bottom: 0;">
+                <div class="panel-header">
+                  <span class="panel-title" style="font-size: 0.9rem;">Languages</span>
+                </div>
+                <div id="languageBars">
+                  <p style="color: var(--text-muted); font-size: 0.78rem;">No events logged today.</p>
+                </div>
+              </div>
+
+              <!-- Activity Consistency Meter (Dynamically Calculated) -->
+              <div class="panel-card" style="margin-bottom: 0;">
+                <div class="panel-header">
+                  <span class="panel-title" style="font-size: 0.9rem;">Consistency</span>
+                  <div class="badge-pill">7-Day</div>
+                </div>
+                <div class="gauge-container">
+                  <div class="gauge-semi">
+                    <div class="gauge-value" id="consistencyScore">0%</div>
+                  </div>
+                  <span style="font-size: 0.72rem; color: var(--text-muted); margin-top: 0.4rem;" id="consistencySub">Active days ratio</span>
+                </div>
+              </div>
+
+              <!-- Workspaces List -->
+              <div class="panel-card" style="margin-bottom: 0;">
+                <div class="panel-header">
+                  <span class="panel-title" style="font-size: 0.9rem;">Workspaces</span>
+                </div>
+                <div id="projectsTable" style="display: flex; flex-direction: column; gap: 0.5rem;">
+                  <!-- Injected by JS -->
+                </div>
+              </div>
+
+            </div>
+
+          </div>
+
+          <!-- Right Column: Card & Transaction Activity -->
+          <div class="right-sidebar-panel">
+            
+            <!-- Lime Green Virtual Developer Card -->
+            <div class="lime-card">
+              <div class="card-top">
+                <span class="card-chip">DEVELOPER PASS</span>
+                <span class="card-logo">VELOCITY</span>
+              </div>
+              <div class="card-number" id="cardKeyDisplay">vel_sk_•••• •••• 9a4f</div>
+              <div class="card-bottom">
+                <div>
+                  <span style="opacity: 0.8; font-size: 0.68rem; display: block;">KEY STATUS</span>
+                  <strong id="cardKeyStatus">ACTIVE • MULTI-TENANT</strong>
+                </div>
+                <div>
+                  <span style="opacity: 0.8; font-size: 0.68rem; display: block;">STORAGE</span>
+                  <strong>LOCAL SQLITE</strong>
+                </div>
+              </div>
+            </div>
+
+            <!-- Quick Action Buttons -->
+            <div class="panel-card" style="margin-bottom: 0; padding: 1rem 1.25rem;">
+              <div class="quick-actions-row">
+                <button class="action-btn-circle" onclick="copyActiveKey()">
+                  <div class="circle-icon">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                  </div>
+                  <span>Copy Key</span>
+                </button>
+                <button class="action-btn-circle" onclick="openCreateModal()">
+                  <div class="circle-icon">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                  </div>
+                  <span>New Key</span>
+                </button>
+                <button class="action-btn-circle" onclick="fetchData(true)">
+                  <div class="circle-icon">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+                  </div>
+                  <span>Refresh</span>
+                </button>
+                <button class="action-btn-circle" onclick="switchTab('keysTab', document.querySelectorAll('.nav-link')[1])">
+                  <div class="circle-icon">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+                  </div>
+                  <span>Manage</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Recent Ingest Stream (Transactions Style with Clickable Inspector) -->
+            <div class="panel-card" style="margin-bottom: 0;">
+              <div class="panel-header">
+                <span class="panel-title" style="font-size: 0.95rem;">Recent Ingest Stream</span>
+                <span style="font-size: 0.75rem; color: var(--text-muted);">Click to inspect</span>
+              </div>
+              <div class="activity-feed-list" id="activityFeed">
+                <!-- Injected by JS -->
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+      <!-- TAB 2: DEVELOPER API KEYS -->
+      <div id="keysTab" style="display: none;">
+        
+        <div class="panel-card">
+          <div class="panel-header">
+            <div>
+              <div class="panel-title">Developer API Keys</div>
+              <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.2rem;">
+                Create and manage isolated access tokens for your scripts, websites, and team members.
+              </p>
+            </div>
+            <button class="btn-create" onclick="openCreateModal()">+ Create New Secret Key</button>
+          </div>
+
+          <table class="keys-table">
+            <thead>
+              <tr>
+                <th>CLIENT / NAME</th>
+                <th>SECRET PREFIX</th>
+                <th>REQUESTS LOGGED</th>
+                <th>RATE LIMIT</th>
+                <th>CREATED</th>
+                <th>ACTION</th>
+              </tr>
+            </thead>
+            <tbody id="keysTableBody">
+              <tr>
+                <td colspan="6" style="text-align: center; color: var(--text-muted);">Loading keys...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Code Snippet Box -->
+        <div class="panel-card">
+          <div class="panel-header">
+            <span class="panel-title">Client Integration Example</span>
+            <div class="badge-pill">HTTP Header Auth</div>
+          </div>
+          <p style="font-size: 0.82rem; color: var(--text-muted);">
+            Include your generated secret key in the <code>x-api-key</code> header:
+          </p>
+
+          <pre class="code-card-light" id="codeSnippetBox">
+# Python Example
+import requests
+
+API_KEY = "vel_sk_your_secret_key"
+
+response = requests.get(
+    "http://127.0.0.1:8000/api/v1/stats/today",
+    headers={"x-api-key": API_KEY}
+)
+print(response.json())
+          </pre>
+        </div>
+
+      </div>
+
+      <!-- TAB 3: IN-APP DOCUMENTATION -->
+      <div id="docsTab" style="display: none;">
+        <div class="panel-card" style="padding: 0; overflow: hidden; border-radius: 18px; border: 1px solid var(--border-color);">
+          <div class="panel-header" style="padding: 1.25rem 1.5rem; margin-bottom: 0; border-bottom: 1px solid var(--border-color); background: var(--bg-subtle);">
+            <div>
+              <span class="panel-title">Interactive API Documentation</span>
+              <p style="font-size: 0.78rem; color: var(--text-muted); margin-top: 0.15rem;">Live OpenAPI & Swagger documentation — Test and explore all endpoints</p>
+            </div>
+            <a href="/docs" target="_blank" class="btn-create" style="font-size: 0.75rem;">Open Fullscreen ↗</a>
+          </div>
+          <iframe src="/docs" style="width: 100%; height: 750px; border: none; background: #FFFFFF;" title="API Documentation"></iframe>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- Event Inspector Modal -->
+  <div class="modal-backdrop" id="eventInspectorModal">
+    <div class="modal-box">
+      <div class="panel-header" style="margin-bottom: 1rem;">
+        <h3 style="font-size: 1.15rem; font-weight: 700;" id="modalEventTitle">Event Details</h3>
+        <button class="icon-btn" style="width: 32px; height: 32px;" onclick="closeEventModal()">✕</button>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 0.75rem; font-size: 0.85rem;" id="modalEventBody">
+        <!-- Injected by JS -->
+      </div>
+
+      <div style="margin-top: 1.5rem; display: flex; justify-content: flex-end;">
+        <button class="btn-dark-sm" style="width: auto; padding: 0.5rem 1.25rem;" onclick="closeEventModal()">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Create Key Modal -->
+  <div class="modal-backdrop" id="createModal">
+    <div class="modal-box">
+      <h3 style="font-size: 1.15rem; font-weight: 700;">Create Secret Key</h3>
+      <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.25rem;">
+        Assign a name to identify this client application.
+      </p>
+
+      <div id="modalForm">
+        <input type="text" id="newKeyName" class="modal-input" placeholder="e.g. Priya's MacBook or Production Website" />
+        <div style="display: flex; justify-content: flex-end; gap: 0.75rem;">
+          <button class="btn-create" onclick="closeCreateModal()">Cancel</button>
+          <button class="btn-dark-sm" style="width: auto; padding: 0.6rem 1.25rem;" onclick="submitCreateKey()">Generate Key</button>
+        </div>
+      </div>
+
+      <div id="modalResult" style="display: none;">
+        <div style="background: var(--bg-subtle); border: 1px solid var(--border-color); padding: 0.85rem; border-radius: 10px; font-family: var(--font-mono); font-size: 0.85rem; display: flex; justify-content: space-between; align-items: center; word-break: break-all; margin: 1rem 0;">
+          <span id="revealedKey">vel_sk_...</span>
+          <button class="btn-dark-sm" style="width: auto; padding: 0.35rem 0.65rem;" onclick="copyRevealedKey()">Copy</button>
+        </div>
+        <p style="font-size: 0.75rem; color: #DC2626; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.35rem;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          Please copy this key now. It will never be displayed again.
+        </p>
+        <button class="btn-dark-sm" onclick="closeCreateModal()">Done</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 1-Click Connect PC Modal -->
+  <div class="modal-backdrop" id="connectModal">
+    <div class="modal-box" style="max-width: 600px;">
+      <div class="panel-header" style="margin-bottom: 0.75rem;">
+        <div>
+          <h3 style="font-size: 1.15rem; font-weight: 800; display: flex; align-items: center; gap: 0.45rem;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+            1-Click Connect Any PC
+          </h3>
+          <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.15rem;">
+            Run this single command on any PC (yours or a teammate's) to track coding time and git commits with 0-config.
+          </p>
+        </div>
+        <button class="icon-btn" style="width: 32px; height: 32px;" onclick="closeConnectModal()">✕</button>
+      </div>
+
+      <div style="margin: 1rem 0;">
+        <label style="font-size: 0.75rem; font-weight: 700; text-transform: uppercase; color: var(--text-muted); display: flex; align-items: center; gap: 0.35rem; margin-bottom: 0.35rem;">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+          Windows (PowerShell)
+        </label>
+        <div style="background: #1E293B; border-radius: 10px; padding: 0.75rem 1rem; display: flex; justify-content: space-between; align-items: center; gap: 0.5rem;">
+          <code style="font-family: var(--font-mono); font-size: 0.78rem; color: #38BDF8; word-break: break-all;" id="winInstallCmd">irm http://127.0.0.1:8000/install.ps1?key=... | iex</code>
+          <button class="btn-dark-sm" style="width: auto; padding: 0.35rem 0.75rem; background: #334155;" onclick="copyCmd('winInstallCmd')">Copy</button>
+        </div>
+      </div>
+
+      <div style="margin: 1rem 0 1.5rem 0;">
+        <label style="font-size: 0.75rem; font-weight: 700; text-transform: uppercase; color: var(--text-muted); display: flex; align-items: center; gap: 0.35rem; margin-bottom: 0.35rem;">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+          Mac / Linux (Terminal)
+        </label>
+        <div style="background: #1E293B; border-radius: 10px; padding: 0.75rem 1rem; display: flex; justify-content: space-between; align-items: center; gap: 0.5rem;">
+          <code style="font-family: var(--font-mono); font-size: 0.78rem; color: #A3E635; word-break: break-all;" id="macInstallCmd">curl -sSL http://127.0.0.1:8000/install.sh?key=... | bash</code>
+          <button class="btn-dark-sm" style="width: auto; padding: 0.35rem 0.75rem; background: #334155;" onclick="copyCmd('macInstallCmd')">Copy</button>
+        </div>
+      </div>
+
+      <div style="background: var(--bg-subtle); border-radius: 10px; padding: 0.85rem; font-size: 0.75rem; color: var(--text-muted); line-height: 1.4; display: flex; gap: 0.5rem; align-items: flex-start;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink: 0; margin-top: 1px;"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        <div><strong>Zero Privacy Risk:</strong> Lightweight local background process reporting only active focus duration & git commit hashes. Code contents and sensitive files are never accessed or transmitted.</div>
+      </div>
+
+      <div style="margin-top: 1.25rem; display: flex; justify-content: flex-end;">
+        <button class="btn-dark-sm" style="width: auto; padding: 0.55rem 1.25rem;" onclick="closeConnectModal()">Done</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- AI Standup Modal -->
+  <div class="modal-backdrop" id="standupModal">
+    <div class="modal-box" style="max-width: 620px;">
+      <div class="panel-header" style="margin-bottom: 0.75rem;">
+        <div>
+          <h3 style="font-size: 1.15rem; font-weight: 800; display: flex; align-items: center; gap: 0.45rem;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+            AI Daily Standup Report
+          </h3>
+          <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.15rem;">
+            Instant summary of today's technical engineering achievements.
+          </p>
+        </div>
+        <button class="icon-btn" style="width: 32px; height: 32px;" onclick="closeStandupModal()">✕</button>
+      </div>
+
+      <div style="background: #0F172A; border: 1px solid #1E293B; border-radius: 14px; padding: 1.5rem; margin: 1rem 0; font-family: var(--font-sans); font-size: 0.85rem; color: #E2E8F0; line-height: 1.6; max-height: 380px; overflow-y: auto;" id="standupContentBox">Generating today's standup...</div>
+
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1.25rem;">
+        <span style="font-size: 0.75rem; color: var(--text-muted);">Ready for Slack, Discord, or Notion</span>
+        <div style="display: flex; gap: 0.75rem;">
+          <button class="btn-create" onclick="closeStandupModal()">Close</button>
+          <button class="btn-dark-sm" style="width: auto; padding: 0.55rem 1.25rem; background: var(--accent-green-dark); display: inline-flex; align-items: center; gap: 0.4rem;" onclick="copyStandup()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+            Copy Standup
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const DEFAULT_KEY = "my_secure_telemetry_key_9f8d7e6c5b4a321";
+    const apiKeyInput = document.getElementById('apiKeyInput');
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const paramKey = urlParams.get('key');
+    if (paramKey) {
+      storedKey = paramKey.trim();
+      localStorage.setItem('telemetry_api_key', storedKey);
+      // Security: Immediately scrub ?key= from visible browser address bar
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+
+    apiKeyInput.value = storedKey;
+
+    apiKeyInput.addEventListener('change', () => {
+      localStorage.setItem('telemetry_api_key', apiKeyInput.value.trim());
+      showToast('Switched API Key: ' + apiKeyInput.value.slice(0, 10) + '...');
+      fetchData(true);
+      fetchApiKeys();
+    });
+
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      toast.innerText = msg;
+      toast.style.display = 'block';
+      setTimeout(() => { toast.style.display = 'none'; }, 2500);
+    }
+
+    function setCustomGoal() {
+      const custom = prompt('Enter your daily coding goal in hours (e.g. 2, 4, 6, 8):', targetGoalHours);
+      if (custom && !isNaN(parseFloat(custom))) {
+        targetGoalHours = parseFloat(custom);
+        localStorage.setItem('telemetry_goal_hours', targetGoalHours);
+        document.getElementById('goalTargetBadge').innerText = `${targetGoalHours.toFixed(1)}h goal`;
+        document.getElementById('goalTargetLabel').innerText = `Target: ${targetGoalHours.toFixed(1)}h`;
+        fetchData();
+        showToast(`Updated daily goal to ${targetGoalHours} hours`);
+      }
+    }
+
+    function getHeaders() {
+      const key = apiKeyInput.value.trim() || DEFAULT_KEY;
+      return {
+        'x-api-key': key,
+        'Content-Type': 'application/json'
+      };
+    }
+
+    function switchTab(tabId, btn) {
+      document.getElementById('dashboardTab').style.display = tabId === 'dashboardTab' ? 'block' : 'none';
+      document.getElementById('keysTab').style.display = tabId === 'keysTab' ? 'block' : 'none';
+      document.getElementById('docsTab').style.display = tabId === 'docsTab' ? 'block' : 'none';
+
+      document.querySelectorAll('.nav-link').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+
+      if (tabId === 'keysTab') {
+        fetchApiKeys();
+      }
+    }
+
+    async function fetchData(showAnim = false) {
+      try {
+        if (showAnim) {
+          const icon = document.getElementById('refreshIcon');
+          icon.style.transform = 'rotate(360deg)';
+          icon.style.transition = 'transform 0.5s ease';
+          setTimeout(() => { icon.style.transform = 'none'; icon.style.transition = 'none'; }, 500);
+        }
+
+        const headers = getHeaders();
+
+        // 1. Today Stats
+        const todayRes = await fetch('/api/v1/stats/today', { headers });
+        if (todayRes.ok) {
+          const today = await todayRes.json();
+          document.getElementById('todayActiveTime').innerText = today.active_coding_formatted || '0h 0m';
+          document.getElementById('todayCommits').innerText = today.commits_today;
+          document.getElementById('todayProjectsCount').innerText = today.active_projects.length;
+          document.getElementById('todayProjectsList').innerText = today.active_projects.join(', ') || 'None';
+          document.getElementById('todayEventsCount').innerText = today.total_events;
+
+          const statusText = document.getElementById('todayStatusText');
+          if (today.is_currently_coding) {
+            statusText.innerText = "⚡ Currently coding active session";
+          } else {
+            statusText.innerText = today.last_activity_ago_minutes !== null ? `Idle (${today.last_activity_ago_minutes}m ago)` : "Awaiting events";
+          }
+
+          // Goal Progress calculation
+          const totalHours = (today.active_coding_seconds || 0) / 3600;
+          const goalPct = Math.min(100, Math.round((totalHours / targetGoalHours) * 100));
+          document.getElementById('dailyGoalBar').style.width = `${Math.max(5, goalPct)}%`;
+          document.getElementById('goalCurrent').innerText = `${today.active_coding_formatted} logged`;
+          document.getElementById('goalTargetBadge').innerText = `${targetGoalHours.toFixed(1)}h goal ✎`;
+          document.getElementById('goalTargetLabel').innerText = `Target: ${targetGoalHours.toFixed(1)}h`;
+
+          renderLanguages(today.top_languages);
+        }
+
+        // 2. Weekly Patterned Chart & Consistency calculation
+        const weeklyRes = await fetch('/api/v1/stats/weekly', { headers });
+        if (weeklyRes.ok) {
+          const weekly = await weeklyRes.json();
+          renderWeeklyChart(weekly.weekly_breakdown);
+
+          // Calculate real 7-day consistency score
+          const days = weekly.weekly_breakdown || [];
+          const activeDaysCount = days.filter(d => d.active_seconds > 0).length;
+          const consistency = Math.round((activeDaysCount / (days.length || 7)) * 100);
+          document.getElementById('consistencyScore').innerText = `${consistency}%`;
+          document.getElementById('consistencySub').innerText = `${activeDaysCount} of ${days.length} days active`;
+        }
+
+        // 3. Projects
+        const projectsRes = await fetch('/api/v1/projects', { headers });
+        if (projectsRes.ok) {
+          const projects = await projectsRes.json();
+          renderProjects(projects);
+        }
+
+        // 4. Feed
+        const feedRes = await fetch('/api/v1/activity/recent?limit=15', { headers });
+        if (feedRes.ok) {
+          cachedFeedEvents = await feedRes.json();
+          renderFeed(cachedFeedEvents);
+        }
+
+        // Update card preview
+        const currentKey = apiKeyInput.value.trim() || DEFAULT_KEY;
+        document.getElementById('cardKeyDisplay').innerText = `vel_sk_•••• •••• ${currentKey.slice(-4)}`;
+
+        if (showAnim) showToast('Live Telemetry Refreshed');
+      } catch (err) {
+        console.error("Telemetry fetch error:", err);
+      }
+    }
+
+    async function fetchApiKeys() {
+      try {
+        const res = await fetch('/api/v1/keys', { headers: getHeaders() });
+        const tbody = document.getElementById('keysTableBody');
+        if (!res.ok) {
+          tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: #DC2626;">Authentication error. Please check your Key in the top search bar.</td></tr>`;
+          return;
+        }
+
+        const keys = await res.json();
+        if (keys.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-muted);">No keys generated yet.</td></tr>`;
+          return;
+        }
+
+        tbody.innerHTML = keys.map(k => `
+          <tr>
+            <td><strong>${k.name}</strong></td>
+            <td><span class="key-badge-light">${k.key_prefix}</span></td>
+            <td><strong>${k.total_requests}</strong> calls</td>
+            <td>${k.rate_limit_per_minute}/min</td>
+            <td style="color: var(--text-muted); font-size: 0.75rem;">${new Date(k.created_at).toLocaleDateString()}</td>
+            <td>
+              <button class="btn-revoke" onclick="revokeKey(${k.id}, '${k.name}')">Revoke</button>
+            </td>
+          </tr>
+        `).join('');
+      } catch (err) {
+        console.error("Keys error:", err);
+      }
+    }
+
+    function inspectEvent(index) {
+      const ev = cachedFeedEvents[index];
+      if (!ev) return;
+
+      document.getElementById('modalEventTitle').innerText = `${ev.event_type.toUpperCase()} • ${ev.project_name}`;
+      
+      const meta = ev.metadata_json || {};
+      const body = document.getElementById('modalEventBody');
+      body.innerHTML = `
+        <div style="background: var(--bg-subtle); padding: 0.85rem; border-radius: 10px; border: 1px solid var(--border-color);">
+          <div style="display: grid; grid-template-columns: 120px 1fr; gap: 0.5rem;">
+            <strong>Workspace:</strong> <span>${ev.project_name}</span>
+            <strong>Event Type:</strong> <span>${ev.event_type}</span>
+            <strong>Source:</strong> <span>${ev.source}</span>
+            <strong>Language:</strong> <span>${ev.language || 'N/A'}</span>
+            <strong>Path:</strong> <span style="font-family: var(--font-mono);">${ev.sanitized_path || 'N/A'}</span>
+            <strong>Timestamp:</strong> <span>${new Date(ev.timestamp).toLocaleString()}</span>
+          </div>
+        </div>
+        ${meta.commit_message ? `
+          <div style="background: #F0FDF4; border: 1px solid #BBF7D0; padding: 0.75rem; border-radius: 10px; color: #166534;">
+            <strong>Commit Message:</strong> ${meta.commit_message}
+            <div style="font-size: 0.75rem; margin-top: 0.25rem;">SHA: ${meta.commit_hash || 'N/A'} • Author: ${meta.author || 'N/A'}</div>
+          </div>
+        ` : ''}
+        <div style="margin-top: 0.5rem;">
+          <strong style="font-size: 0.78rem; color: var(--text-muted);">RAW EVENT PAYLOAD:</strong>
+          <pre style="background: #1E293B; color: #F8FAFC; padding: 0.75rem; border-radius: 8px; font-family: var(--font-mono); font-size: 0.72rem; overflow-x: auto; margin-top: 0.25rem;">${JSON.stringify(ev, null, 2)}</pre>
+        </div>
+      `;
+
+      document.getElementById('eventInspectorModal').style.display = 'flex';
+    }
+
+    function closeEventModal() {
+      document.getElementById('eventInspectorModal').style.display = 'none';
+    }
+
+    function openCreateModal() {
+      document.getElementById('createModal').style.display = 'flex';
+      document.getElementById('modalForm').style.display = 'block';
+      document.getElementById('modalResult').style.display = 'none';
+      document.getElementById('newKeyName').value = '';
+    }
+
+    function closeCreateModal() {
+      document.getElementById('createModal').style.display = 'none';
+      fetchApiKeys();
+    }
+
+    async function submitCreateKey() {
+      const name = document.getElementById('newKeyName').value.trim();
+      if (!name) return alert('Please enter a name');
+
+      try {
+        const res = await fetch('/api/v1/keys', {
+          method: 'POST',
+          headers: getHeaders(),
+          body: JSON.stringify({ name: name, rate_limit_per_minute: 60 })
+        });
+
+        if (!res.ok) {
+          const err = await res.json();
+          return alert(err.detail || 'Failed to create key');
+        }
+
+        const data = await res.json();
+        document.getElementById('modalForm').style.display = 'none';
+        document.getElementById('modalResult').style.display = 'block';
+        document.getElementById('revealedKey').innerText = data.key;
+        showToast('Generated key for: ' + name);
+      } catch (err) {
+        alert('Network error: ' + err);
+      }
+    }
+
+    function copyRevealedKey() {
+      const text = document.getElementById('revealedKey').innerText;
+      navigator.clipboard.writeText(text);
+      showToast('Key copied to clipboard');
+    }
+
+    function copyActiveKey() {
+      const key = apiKeyInput.value.trim() || DEFAULT_KEY;
+      navigator.clipboard.writeText(key);
+      showToast('Active API Key copied');
+    }
+
+    async function revokeKey(id, name) {
+      if (!confirm(`Revoke key: "${name}"? Applications using this key will immediately lose access.`)) return;
+
+      try {
+        const res = await fetch(`/api/v1/keys/${id}`, {
+          method: 'DELETE',
+          headers: getHeaders()
+        });
+        if (res.ok) {
+          fetchApiKeys();
+          showToast(`Revoked key: ${name}`);
+        }
+      } catch (err) {
+        alert('Error: ' + err);
+      }
+    }
+
+    function renderWeeklyChart(days) {
+      const chart = document.getElementById('weeklyChart');
+      if (!days || days.length === 0) return;
+      const maxHours = Math.max(...days.map(d => d.active_hours), 1.0);
+
+      chart.innerHTML = days.map((d, index) => {
+        const heightPct = Math.max(12, Math.round((d.active_hours / maxHours) * 100));
+        return `
+          <div class="chart-pillar">
+            <div class="pillar-track" title="${d.date}: ${d.active_formatted}">
+              <div class="pillar-fill-green" style="height: ${heightPct}%;"></div>
+              <div class="pillar-fill-orange"></div>
+            </div>
+            <span class="pillar-label">${d.day_name}</span>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderLanguages(langs) {
+      const container = document.getElementById('languageBars');
+      const entries = Object.entries(langs || {});
+      if (entries.length === 0) {
+        container.innerHTML = `<p style="color: var(--text-muted); font-size: 0.78rem;">No events logged today.</p>`;
+        return;
+      }
+      const total = entries.reduce((acc, [, val]) => acc + val, 0) || 1;
+      container.innerHTML = entries.map(([name, count]) => {
+        const pct = Math.round((count / total) * 100);
+        return `
+          <div style="margin-bottom: 0.6rem;">
+            <div style="display: flex; justify-content: space-between; font-size: 0.75rem; font-weight: 600; margin-bottom: 0.2rem;">
+              <span>${name.toUpperCase()}</span>
+              <span style="color: var(--text-muted);">${pct}%</span>
+            </div>
+            <div style="height: 6px; background: #F1F3F5; border-radius: 3px; overflow: hidden;">
+              <div style="height: 100%; width: ${pct}%; background: #84CC16; border-radius: 3px;"></div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderProjects(projects) {
+      const container = document.getElementById('projectsTable');
+      if (!projects || projects.length === 0) {
+        container.innerHTML = `<p style="color: var(--text-muted); font-size: 0.78rem;">No workspaces active.</p>`;
+        return;
+      }
+      container.innerHTML = projects.slice(0, 3).map(p => `
+        <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.35rem 0; border-bottom: 1px solid var(--border-light);">
+          <div>
+            <div style="font-size: 0.8rem; font-weight: 700;">${p.project_name}</div>
+            <div style="font-size: 0.7rem; color: var(--text-muted);">${p.total_commits} commits</div>
+          </div>
+          <div style="font-family: var(--font-mono); font-size: 0.8rem; font-weight: 700; color: #65A30D;">
+            ${p.total_active_formatted}
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function parseLocalTime(timestamp) {
+      if (!timestamp) return { time: '', rel: '', full: '' };
+      let str = String(timestamp).trim();
+      // If the ISO string does not end with Z or timezone offset (+HH:MM / -HH:MM), append Z so it parses as UTC
+      if (!str.endsWith('Z') && !/[+-]\d{2}:\d{2}$/.test(str)) {
+        str += 'Z';
+      }
+      const d = new Date(str);
+      if (isNaN(d.getTime())) return { time: str, rel: '', full: str };
+
+      const now = new Date();
+      const diffSec = Math.max(0, Math.floor((now - d) / 1000));
+      let rel = '';
+      if (diffSec < 30) rel = 'Just now';
+      else if (diffSec < 60) rel = `${diffSec}s ago`;
+      else if (diffSec < 3600) rel = `${Math.floor(diffSec / 60)}m ago`;
+      else if (diffSec < 86400) rel = `${Math.floor(diffSec / 3600)}h ago`;
+      else rel = `${Math.floor(diffSec / 86400)}d ago`;
+
+      // Formats in user's exact local timezone (e.g. IST: 08:09 PM, 11:02 PM)
+      const time = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
+      return { time, rel, full: d.toLocaleString() };
+    }
+
+    function renderFeed(events) {
+      const feed = document.getElementById('activityFeed');
+      if (!events || events.length === 0) {
+        feed.innerHTML = `<p style="color: var(--text-muted); font-size: 0.78rem; text-align: center; padding: 1rem 0;">No recent events.</p>`;
+        return;
+      }
+      feed.innerHTML = events.map((e, index) => {
+        const timeInfo = parseLocalTime(e.timestamp);
+        const path = e.sanitized_path || (e.metadata_json?.commit_message ? e.metadata_json.commit_message : e.event_type);
+        return `
+          <div class="activity-feed-item" onclick="inspectEvent(${index})" title="Click to inspect: ${timeInfo.full}">
+            <div class="feed-left">
+              <div class="feed-icon">${e.project_name.slice(0, 2).toUpperCase()}</div>
+              <div>
+                <div class="feed-name" style="max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${path}</div>
+                <div class="feed-meta">${e.project_name} • ${e.event_type}</div>
+              </div>
+            </div>
+            <div class="feed-metric">
+              <div style="font-size: 0.75rem; font-weight: 700; color: var(--text-main);">${timeInfo.time}</div>
+              <span style="font-size: 0.68rem; color: var(--text-muted); font-weight: 500;">${timeInfo.rel}</span>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // Connect PC Modal Handlers
+    function openConnectModal() {
+      const origin = window.location.origin;
+      const key = apiKeyInput.value.trim() || DEFAULT_KEY;
+      document.getElementById('winInstallCmd').innerText = `irm ${origin}/install.ps1?key=${key} | iex`;
+      document.getElementById('macInstallCmd').innerText = `curl -sSL ${origin}/install.sh?key=${key} | bash`;
+      document.getElementById('connectModal').style.display = 'flex';
+    }
+
+    function closeConnectModal() {
+      document.getElementById('connectModal').style.display = 'none';
+    }
+
+    function copyCmd(elementId) {
+      const text = document.getElementById(elementId).innerText;
+      navigator.clipboard.writeText(text);
+      showToast('Copied 1-click command to clipboard!');
+    }
+
+    // Markdown to Clean HTML Formatter
+    function formatMarkdownToHtml(md) {
+      if (!md) return '';
+      let html = md
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;");
+
+      // Replace bold **text** with styled bold text
+      html = html.replace(/\*\*(.*?)\*\*/g, '<strong style="color: #FFFFFF; font-weight: 700; font-size: 0.9rem;">$1</strong>');
+
+      // Replace code `text` with styled inline badge
+      html = html.replace(/`(.*?)`/g, '<code style="background: rgba(255,255,255,0.1); padding: 0.15rem 0.4rem; border-radius: 5px; color: #38BDF8; font-family: var(--font-mono); font-size: 0.8rem;">$1</code>');
+
+      // Replace italic *text* with subtle text
+      html = html.replace(/\*(.*?)\*/g, '<span style="color: #94A3B8; font-style: italic; font-size: 0.78rem;">$1</span>');
+
+      // Replace bullet lines • or - with clean vector bullet items
+      html = html.replace(/^[•\-]\s+(.*)$/gm, '<div style="display: flex; align-items: center; gap: 0.5rem; margin: 0.3rem 0 0.3rem 0.5rem;"><span style="color: var(--accent-green); font-weight: bold; font-size: 0.9rem;">›</span> <span>$1</span></div>');
+
+      // Double newlines into spacing
+      html = html.replace(/\n\n/g, '<div style="height: 0.85rem;"></div>');
+      html = html.replace(/\n/g, '<br>');
+
+      return html;
+    }
+
+    // Standup Modal Handlers
+    let currentStandupText = '';
+    async function openStandupModal() {
+      document.getElementById('standupModal').style.display = 'flex';
+      const box = document.getElementById('standupContentBox');
+      box.innerHTML = '<span style="color: var(--text-muted);">Generating today\'s engineering standup...</span>';
+      try {
+        const key = apiKeyInput.value.trim() || DEFAULT_KEY;
+        const res = await fetch('/api/v1/analytics/standup', {
+          headers: { 'x-api-key': key }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          currentStandupText = data.formatted_markdown || 'No activity logged today.';
+          box.innerHTML = formatMarkdownToHtml(currentStandupText);
+        } else {
+          box.innerHTML = '<span style="color: #EF4444;">Failed to generate standup report (' + res.status + ').</span>';
+        }
+      } catch (err) {
+        box.innerHTML = '<span style="color: #EF4444;">Could not reach server: ' + err.message + '</span>';
+      }
+    }
+
+    function closeStandupModal() {
+      document.getElementById('standupModal').style.display = 'none';
+    }
+
+    function copyStandup() {
+      if (!currentStandupText) return;
+      navigator.clipboard.writeText(currentStandupText);
+      showToast('Copied Standup report for Slack/Discord!');
+    }
+
+    fetchData();
+    setInterval(fetchData, 8000);
+  </script>
+</body>
+</html>
