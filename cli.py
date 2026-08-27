@@ -114,7 +114,7 @@ def main():
 
     # Watch folder
     watch_parser = subparsers.add_parser("watch", help="Start folder watcher daemon")
-    watch_parser.add_argument("folder", nargs="?", default=".", help="Folder path to monitor (default: current directory)")
+    watch_parser.add_argument("folder", nargs="?", default=settings.WORKSPACE_ROOT or ".", help="Folder path to monitor (default: WORKSPACE_ROOT or current directory)")
 
     # Git Hook (Repo specific)
     hook_parser = subparsers.add_parser("git-hook", help="Install git post-commit telemetry hook for target repo")

@@ -49,10 +49,21 @@ class WorkspaceChangeHandler(FileSystemEventHandler):
             return
         self.send_event(event.src_path, "file_created")
 
+    def get_project_name(self, filepath: str) -> str:
+        try:
+            rel = os.path.relpath(filepath, self.workspace_path)
+            parts = rel.replace("\\", "/").split("/")
+            if len(parts) > 1:
+                return parts[0]
+        except Exception:
+            pass
+        return self.project_name
+
     def send_event(self, filepath: str, event_type: str):
         try:
+            proj_name = self.get_project_name(filepath)
             payload = {
-                "project_name": self.project_name,
+                "project_name": proj_name,
                 "raw_path": filepath,
                 "event_type": event_type,
                 "lines_added": 0,
@@ -65,7 +76,7 @@ class WorkspaceChangeHandler(FileSystemEventHandler):
                 if res.status_code == 200:
                     data = res.json()
                     if data.get("status") == "success":
-                        print(f"⚡ [Tracked] {self.project_name} -> {data.get('sanitized_path')}")
+                        print(f"⚡ [Tracked] {proj_name} -> {data.get('sanitized_path')}")
         except Exception:
             pass
 
