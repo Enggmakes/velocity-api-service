@@ -878,7 +878,7 @@
               Dashboard
             </a>
           </li>
-          <li>
+          <li id="navKeysItem">
             <a class="nav-link" onclick="switchTab('keysTab', this)">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 2l-2 2m-1.5 1.5L10 13m-3 3l-3 3 1 1 3-3m2-2l7.5-7.5M15 7l2 2"/></svg>
               API Keys
@@ -894,13 +894,13 @@
       </div>
 
       <!-- Bottom Card -->
-      <div class="sidebar-card">
+      <div class="sidebar-card" id="sidebarAdminCard">
         <div class="sidebar-card-icon">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
         </div>
         <h4>Local Telemetry</h4>
         <p>100% private SQLite storage with zero external data leakage.</p>
-        <button class="btn-dark-sm" onclick="openCreateModal()">+ Create API Key</button>
+        <button class="btn-dark-sm admin-only" onclick="openCreateModal()">+ Create API Key</button>
       </div>
     </aside>
 
@@ -937,7 +937,7 @@
             Connect PC
           </button>
 
-          <button class="btn-create" onclick="openCreateModal()">
+          <button class="btn-create admin-only" onclick="openCreateModal()">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
             Add Key
           </button>
@@ -1095,7 +1095,7 @@
                   </div>
                   <span>Copy Key</span>
                 </button>
-                <button class="action-btn-circle" onclick="openCreateModal()">
+                <button class="action-btn-circle admin-only" onclick="openCreateModal()">
                   <div class="circle-icon">
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
                   </div>
@@ -1338,11 +1338,13 @@ print(response.json())
   </div>
 
   <script>
-    const DEFAULT_KEY = "my_secure_telemetry_key_9f8d7e6c5b4a321";
+    const DEFAULT_KEY = "";
     const apiKeyInput = document.getElementById('apiKeyInput');
 
     const urlParams = new URLSearchParams(window.location.search);
     const paramKey = urlParams.get('key');
+    let storedKey = localStorage.getItem('telemetry_api_key') || "";
+
     if (paramKey) {
       storedKey = paramKey.trim();
       localStorage.setItem('telemetry_api_key', storedKey);
@@ -1354,7 +1356,7 @@ print(response.json())
 
     apiKeyInput.addEventListener('change', () => {
       localStorage.setItem('telemetry_api_key', apiKeyInput.value.trim());
-      showToast('Switched API Key: ' + apiKeyInput.value.slice(0, 10) + '...');
+      showToast('Switched API Key: ' + (apiKeyInput.value.slice(0, 10) || 'None') + '...');
       fetchData(true);
       fetchApiKeys();
     });
@@ -1409,11 +1411,26 @@ print(response.json())
         }
 
         const headers = getHeaders();
+        const activeKeyStr = apiKeyInput.value.trim();
 
         // 1. Today Stats
         const todayRes = await fetch('/api/v1/stats/today', { headers });
         if (todayRes.ok) {
           const today = await todayRes.json();
+          const tName = today.tenant_name || 'Personal Workspace';
+          document.getElementById('tenantName').innerText = tName;
+          document.getElementById('userTitle').innerText = tName;
+          document.getElementById('avatarLetter').innerText = (tName[0] || 'U').toUpperCase();
+
+          if (activeKeyStr) {
+            document.getElementById('cardKeyDisplay').innerText = activeKeyStr.startsWith('vel_sk_') 
+              ? `vel_sk_•••• •••• ${activeKeyStr.slice(-4)}` 
+              : `ADMIN_•••• •••• ${activeKeyStr.slice(-4)}`;
+            document.getElementById('cardKeyStatus').innerText = activeKeyStr.startsWith('vel_sk_') 
+              ? `ACTIVE • ${tName.toUpperCase()}` 
+              : 'MASTER ADMIN';
+          }
+
           document.getElementById('todayActiveTime').innerText = today.active_coding_formatted || '0h 0m';
           document.getElementById('todayCommits').innerText = today.commits_today;
           document.getElementById('todayProjectsCount').innerText = today.active_projects.length;
@@ -1422,7 +1439,7 @@ print(response.json())
 
           const statusText = document.getElementById('todayStatusText');
           if (today.is_currently_coding) {
-            statusText.innerText = "⚡ Currently coding active session";
+            statusText.innerText = "Currently coding active session";
           } else {
             statusText.innerText = today.last_activity_ago_minutes !== null ? `Idle (${today.last_activity_ago_minutes}m ago)` : "Awaiting events";
           }
@@ -1432,10 +1449,17 @@ print(response.json())
           const goalPct = Math.min(100, Math.round((totalHours / targetGoalHours) * 100));
           document.getElementById('dailyGoalBar').style.width = `${Math.max(5, goalPct)}%`;
           document.getElementById('goalCurrent').innerText = `${today.active_coding_formatted} logged`;
-          document.getElementById('goalTargetBadge').innerText = `${targetGoalHours.toFixed(1)}h goal ✎`;
+          document.getElementById('goalTargetBadge').innerText = `${targetGoalHours.toFixed(1)}h goal`;
           document.getElementById('goalTargetLabel').innerText = `Target: ${targetGoalHours.toFixed(1)}h`;
 
           renderLanguages(today.top_languages);
+        } else {
+          document.getElementById('tenantName').innerText = 'Enter API Key in Search Bar';
+          document.getElementById('userTitle').innerText = 'Guest';
+          document.getElementById('avatarLetter').innerText = '?';
+          document.getElementById('todayStatusText').innerText = 'Enter your API Key in the search bar to view your activity.';
+          document.getElementById('cardKeyDisplay').innerText = 'NO ACTIVE KEY';
+          document.getElementById('cardKeyStatus').innerText = 'AUTHENTICATION REQUIRED';
         }
 
         // 2. Weekly Patterned Chart & Consistency calculation
@@ -1479,9 +1503,22 @@ print(response.json())
     async function fetchApiKeys() {
       try {
         const res = await fetch('/api/v1/keys', { headers: getHeaders() });
+        const navKeys = document.getElementById('navKeysItem');
+        const adminBtns = document.querySelectorAll('.admin-only');
+
+        if (res.status === 403 || res.status === 401) {
+          // Regular Developer Key - Hide Admin controls & API Keys Tab
+          if (navKeys) navKeys.style.display = 'none';
+          adminBtns.forEach(btn => btn.style.display = 'none');
+          return;
+        }
+
+        if (navKeys) navKeys.style.display = 'block';
+        adminBtns.forEach(btn => btn.style.display = '');
+
         const tbody = document.getElementById('keysTableBody');
         if (!res.ok) {
-          tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: #DC2626;">Authentication error. Please check your Key in the top search bar.</td></tr>`;
+          tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: #DC2626;">Authentication error.</td></tr>`;
           return;
         }
 

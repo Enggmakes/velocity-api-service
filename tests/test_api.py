@@ -57,7 +57,17 @@ def test_developer_api_key_lifecycle():
     created_record = next(k for k in keys if k["id"] == key_id)
     assert created_record["total_requests"] >= 1
 
-    # 4. Revoke key
+    # Verify regular dev_key CANNOT list, create, or delete keys (RBAC check)
+    forbidden_list = client.get("/api/v1/keys", headers=dev_headers)
+    assert forbidden_list.status_code == 403
+
+    forbidden_create = client.post("/api/v1/keys", json={"name": "Hacked Key"}, headers=dev_headers)
+    assert forbidden_create.status_code == 403
+
+    forbidden_del = client.delete(f"/api/v1/keys/{key_id}", headers=dev_headers)
+    assert forbidden_del.status_code == 403
+
+    # 4. Revoke key using Master Admin
     del_res = client.delete(f"/api/v1/keys/{key_id}", headers=AUTH_HEADERS)
     assert del_res.status_code == 200
 

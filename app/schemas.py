@@ -59,6 +59,7 @@ class TodayStatsResponse(BaseModel):
     top_languages: Dict[str, int]
     is_currently_coding: bool
     last_activity_ago_minutes: Optional[int]
+    tenant_name: Optional[str] = None
 
 
 class ProjectMetricsResponse(BaseModel):

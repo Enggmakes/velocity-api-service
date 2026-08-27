@@ -15,12 +15,18 @@ router = APIRouter(prefix="/api/v1/keys", tags=["Developer API Keys (OpenAI-Styl
 def create_api_key(
     payload: ApiKeyCreate,
     db: Session = Depends(get_db),
-    _: dict = Depends(verify_api_key)
+    auth: dict = Depends(verify_api_key)
 ):
     """
     Generate a new OpenAI-style API key (`vel_sk_...`).
-    The full secret key is returned **ONLY ONCE** in this response.
+    Requires Master Admin privileges.
     """
+    if auth.get("type") != "admin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Admin privileges required to create API keys."
+        )
+
     full_key, prefix = AuthService.generate_api_key()
 
     record = UserApiKey(
@@ -46,12 +52,18 @@ def create_api_key(
 @router.get("", response_model=List[ApiKeyResponse], summary="List all developer API keys")
 def list_api_keys(
     db: Session = Depends(get_db),
-    _: dict = Depends(verify_api_key)
+    auth: dict = Depends(verify_api_key)
 ):
     """
-    List all generated API keys with usage statistics and safe prefixes (`vel_sk_...xxxx`).
-    The full secret key is never exposed.
+    List all generated API keys.
+    Requires Master Admin privileges.
     """
+    if auth.get("type") != "admin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Admin privileges required to view API keys."
+        )
+
     keys = db.query(UserApiKey).order_by(desc(UserApiKey.created_at)).all()
     return keys
 
@@ -60,9 +72,15 @@ def list_api_keys(
 def revoke_api_key(
     key_id: int,
     db: Session = Depends(get_db),
-    _: dict = Depends(verify_api_key)
+    auth: dict = Depends(verify_api_key)
 ):
-    """Revoke / delete an API key so it can no longer be used."""
+    """Revoke / delete an API key. Requires Master Admin privileges."""
+    if auth.get("type") != "admin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Admin privileges required to revoke API keys."
+        )
+
     key_obj = db.query(UserApiKey).filter(UserApiKey.id == key_id).first()
     if not key_obj:
         raise HTTPException(

@@ -19,7 +19,9 @@ def get_today_stats(
     auth: dict = Depends(verify_api_key)
 ):
     """Returns today's active coding metrics isolated to the authenticated user/app."""
-    return AnalyticsService.get_today_stats(db, api_key_id=auth.get("key_id"))
+    stats = AnalyticsService.get_today_stats(db, api_key_id=auth.get("key_id"))
+    stats["tenant_name"] = auth.get("name", "Personal Workspace")
+    return stats
 
 
 @router.get("/stats/weekly", summary="Get 7-day activity timeline breakdown")
