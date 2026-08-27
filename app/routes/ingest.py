@@ -33,6 +33,18 @@ def ingest_heartbeat(
         timestamp=event_time
     )
     db.add(hb)
+
+    # Also log an ActivityEvent so focus sessions immediately populate the Ingest Stream
+    ev = ActivityEvent(
+        api_key_id=api_key_id,
+        source="focus_tracker",
+        event_type="focus_session",
+        project_name=payload.project_name.strip(),
+        sanitized_path=f"workspace/{payload.project_name.strip()}",
+        language=payload.language or "other",
+        timestamp=event_time
+    )
+    db.add(ev)
     db.commit()
 
     return {"status": "success", "message": "Heartbeat recorded"}

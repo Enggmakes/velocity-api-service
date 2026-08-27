@@ -47,20 +47,22 @@ class AnalyticsService:
         return f"{minutes}m"
 
     @staticmethod
-    def get_today_stats(db: Session, api_key_id: Optional[int] = None) -> Dict[str, Any]:
-        """Compute all stats for the current UTC day isolated by user api_key_id."""
+    @staticmethod
+    def get_today_stats(db: Session, api_key_id: Optional[int] = None, is_admin: bool = False) -> Dict[str, Any]:
+        """Compute all stats for the current UTC day isolated by user api_key_id or all for admin."""
         today_start = datetime.datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
 
         # 1. Base queries with tenant isolation
         hb_query = db.query(Heartbeat).filter(Heartbeat.timestamp >= today_start)
         ev_query = db.query(ActivityEvent).filter(ActivityEvent.timestamp >= today_start)
 
-        if api_key_id is not None:
-            hb_query = hb_query.filter(Heartbeat.api_key_id == api_key_id)
-            ev_query = ev_query.filter(ActivityEvent.api_key_id == api_key_id)
-        else:
-            hb_query = hb_query.filter(Heartbeat.api_key_id.is_(None))
-            ev_query = ev_query.filter(ActivityEvent.api_key_id.is_(None))
+        if not is_admin:
+            if api_key_id is not None:
+                hb_query = hb_query.filter(Heartbeat.api_key_id == api_key_id)
+                ev_query = ev_query.filter(ActivityEvent.api_key_id == api_key_id)
+            else:
+                hb_query = hb_query.filter(Heartbeat.api_key_id.is_(None))
+                ev_query = ev_query.filter(ActivityEvent.api_key_id.is_(None))
 
         heartbeats = hb_query.all()
         active_seconds = AnalyticsService.calculate_active_time(heartbeats, settings.HEARTBEAT_TIMEOUT_SECONDS)
@@ -82,10 +84,11 @@ class AnalyticsService:
 
         # 5. Current status check (active in last 5 minutes?)
         latest_hb_query = db.query(Heartbeat)
-        if api_key_id is not None:
-            latest_hb_query = latest_hb_query.filter(Heartbeat.api_key_id == api_key_id)
-        else:
-            latest_hb_query = latest_hb_query.filter(Heartbeat.api_key_id.is_(None))
+        if not is_admin:
+            if api_key_id is not None:
+                latest_hb_query = latest_hb_query.filter(Heartbeat.api_key_id == api_key_id)
+            else:
+                latest_hb_query = latest_hb_query.filter(Heartbeat.api_key_id.is_(None))
 
         latest_hb = latest_hb_query.order_by(desc(Heartbeat.timestamp)).first()
         is_coding = False
@@ -108,8 +111,8 @@ class AnalyticsService:
         }
 
     @staticmethod
-    def get_weekly_stats(db: Session, api_key_id: Optional[int] = None) -> Dict[str, Any]:
-        """Compute daily active coding time and events for the last 7 days per user."""
+    def get_weekly_stats(db: Session, api_key_id: Optional[int] = None, is_admin: bool = False) -> Dict[str, Any]:
+        """Compute daily active coding time and events for the last 7 days per user or for admin."""
         now = datetime.datetime.utcnow()
         days_data = []
 
@@ -121,12 +124,13 @@ class AnalyticsService:
             hb_q = db.query(Heartbeat).filter(Heartbeat.timestamp.between(start_dt, end_dt))
             ev_q = db.query(ActivityEvent).filter(ActivityEvent.timestamp.between(start_dt, end_dt))
 
-            if api_key_id is not None:
-                hb_q = hb_q.filter(Heartbeat.api_key_id == api_key_id)
-                ev_q = ev_q.filter(ActivityEvent.api_key_id == api_key_id)
-            else:
-                hb_q = hb_q.filter(Heartbeat.api_key_id.is_(None))
-                ev_q = ev_q.filter(ActivityEvent.api_key_id.is_(None))
+            if not is_admin:
+                if api_key_id is not None:
+                    hb_q = hb_q.filter(Heartbeat.api_key_id == api_key_id)
+                    ev_q = ev_q.filter(ActivityEvent.api_key_id == api_key_id)
+                else:
+                    hb_q = hb_q.filter(Heartbeat.api_key_id.is_(None))
+                    ev_q = ev_q.filter(ActivityEvent.api_key_id.is_(None))
 
             heartbeats = hb_q.all()
             active_secs = AnalyticsService.calculate_active_time(heartbeats, settings.HEARTBEAT_TIMEOUT_SECONDS)
@@ -146,13 +150,14 @@ class AnalyticsService:
         return {"weekly_breakdown": days_data}
 
     @staticmethod
-    def get_projects_summary(db: Session, api_key_id: Optional[int] = None) -> List[Dict[str, Any]]:
-        """Compute metrics aggregated per project for the given user."""
+    def get_projects_summary(db: Session, api_key_id: Optional[int] = None, is_admin: bool = False) -> List[Dict[str, Any]]:
+        """Compute metrics aggregated per project for the given user or admin."""
         hb_q = db.query(Heartbeat)
-        if api_key_id is not None:
-            hb_q = hb_q.filter(Heartbeat.api_key_id == api_key_id)
-        else:
-            hb_q = hb_q.filter(Heartbeat.api_key_id.is_(None))
+        if not is_admin:
+            if api_key_id is not None:
+                hb_q = hb_q.filter(Heartbeat.api_key_id == api_key_id)
+            else:
+                hb_q = hb_q.filter(Heartbeat.api_key_id.is_(None))
 
         projects = hb_q.with_entities(Heartbeat.project_name).distinct().all()
         project_list = [p[0] for p in projects if p[0]]
@@ -161,10 +166,11 @@ class AnalyticsService:
         for proj in project_list:
             proj_hb_q = hb_q.filter(Heartbeat.project_name == proj)
             proj_ev_q = db.query(ActivityEvent).filter(ActivityEvent.project_name == proj)
-            if api_key_id is not None:
-                proj_ev_q = proj_ev_q.filter(ActivityEvent.api_key_id == api_key_id)
-            else:
-                proj_ev_q = proj_ev_q.filter(ActivityEvent.api_key_id.is_(None))
+            if not is_admin:
+                if api_key_id is not None:
+                    proj_ev_q = proj_ev_q.filter(ActivityEvent.api_key_id == api_key_id)
+                else:
+                    proj_ev_q = proj_ev_q.filter(ActivityEvent.api_key_id.is_(None))
 
             heartbeats = proj_hb_q.all()
             active_secs = AnalyticsService.calculate_active_time(heartbeats, settings.HEARTBEAT_TIMEOUT_SECONDS)

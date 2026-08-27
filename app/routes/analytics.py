@@ -19,7 +19,8 @@ def get_today_stats(
     auth: dict = Depends(verify_api_key)
 ):
     """Returns today's active coding metrics isolated to the authenticated user/app."""
-    stats = AnalyticsService.get_today_stats(db, api_key_id=auth.get("key_id"))
+    is_admin = auth.get("type") == "admin"
+    stats = AnalyticsService.get_today_stats(db, api_key_id=auth.get("key_id"), is_admin=is_admin)
     stats["tenant_name"] = auth.get("name", "Personal Workspace")
     return stats
 
@@ -30,7 +31,8 @@ def get_weekly_stats(
     auth: dict = Depends(verify_api_key)
 ):
     """Returns the daily breakdown of coding hours for the past 7 days isolated to the user."""
-    return AnalyticsService.get_weekly_stats(db, api_key_id=auth.get("key_id"))
+    is_admin = auth.get("type") == "admin"
+    return AnalyticsService.get_weekly_stats(db, api_key_id=auth.get("key_id"), is_admin=is_admin)
 
 
 @router.get("/projects", response_model=List[ProjectMetricsResponse], summary="List metrics by project")
@@ -39,7 +41,8 @@ def get_projects(
     auth: dict = Depends(verify_api_key)
 ):
     """Returns tracked projects with total dwell times for the authenticated user."""
-    return AnalyticsService.get_projects_summary(db, api_key_id=auth.get("key_id"))
+    is_admin = auth.get("type") == "admin"
+    return AnalyticsService.get_projects_summary(db, api_key_id=auth.get("key_id"), is_admin=is_admin)
 
 
 @router.get("/activity/recent", response_model=List[ActivityResponse], summary="Get recent activity stream (sanitized)")
@@ -49,14 +52,16 @@ def get_recent_activity(
     db: Session = Depends(get_db),
     auth: dict = Depends(verify_api_key)
 ):
-    """Returns recent activity events for the authenticated user."""
+    """Returns recent activity events for the authenticated user or all for admin."""
+    is_admin = auth.get("type") == "admin"
     api_key_id = auth.get("key_id")
     query = db.query(ActivityEvent)
 
-    if api_key_id is not None:
-        query = query.filter(ActivityEvent.api_key_id == api_key_id)
-    else:
-        query = query.filter(ActivityEvent.api_key_id.is_(None))
+    if not is_admin:
+        if api_key_id is not None:
+            query = query.filter(ActivityEvent.api_key_id == api_key_id)
+        else:
+            query = query.filter(ActivityEvent.api_key_id.is_(None))
 
     if project:
         query = query.filter(ActivityEvent.project_name == project)
