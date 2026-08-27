@@ -1496,12 +1496,6 @@ print(response.json())
           renderFeed(cachedFeedEvents);
         }
 
-        if (showAnim) showToast('Live Telemetry Refreshed');
-      } catch (err) {
-        console.error("Telemetry fetch error:", err);
-      }
-    }
-
         // Update card preview
         const currentKey = apiKeyInput.value.trim() || DEFAULT_KEY;
         document.getElementById('cardKeyDisplay').innerText = `vel_sk_•••• •••• ${currentKey.slice(-4)}`;
