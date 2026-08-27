@@ -1338,29 +1338,30 @@ print(response.json())
   </div>
 
   <script>
-    const DEFAULT_KEY = "";
+    const DEFAULT_KEY = "my_secure_telemetry_key_9f8d7e6c5b4a321";
     const apiKeyInput = document.getElementById('apiKeyInput');
 
     const urlParams = new URLSearchParams(window.location.search);
     const paramKey = urlParams.get('key');
-    let storedKey = localStorage.getItem('telemetry_api_key') || "";
+    let storedKey = localStorage.getItem('telemetry_api_key') || DEFAULT_KEY;
 
     if (paramKey) {
       storedKey = paramKey.trim();
       localStorage.setItem('telemetry_api_key', storedKey);
-      // Security: Immediately scrub ?key= from visible browser address bar
       window.history.replaceState({}, document.title, window.location.pathname);
     }
 
+    apiKeyInput.value = storedKey;
+
     function onKeyUpdated() {
-      const val = apiKeyInput.value.trim();
+      const val = apiKeyInput.value.trim() || DEFAULT_KEY;
       localStorage.setItem('telemetry_api_key', val);
       fetchData(false);
       fetchApiKeys();
     }
 
     apiKeyInput.addEventListener('change', () => {
-      showToast('Switched API Key: ' + (apiKeyInput.value.slice(0, 10) || 'None') + '...');
+      showToast('Switched API Key: ' + (apiKeyInput.value.slice(0, 10) || 'Default') + '...');
       onKeyUpdated();
     });
 
@@ -1391,16 +1392,6 @@ print(response.json())
         document.getElementById('goalTargetLabel').innerText = `Target: ${targetGoalHours.toFixed(1)}h`;
         fetchData();
         showToast(`Updated daily goal to ${targetGoalHours} hours`);
-      }
-    }
-
-    function promptApiKey() {
-      const current = apiKeyInput.value.trim() || 'my_secure_telemetry_key_9f8d7e6c5b4a321';
-      const k = prompt('Paste your Velocity Master or Developer API Key:', current);
-      if (k && k.trim()) {
-        apiKeyInput.value = k.trim();
-        onKeyUpdated();
-        showToast('API Key applied!');
       }
     }
 
@@ -1435,25 +1426,23 @@ print(response.json())
         }
 
         const headers = getHeaders();
-        const activeKeyStr = apiKeyInput.value.trim();
+        const activeKeyStr = apiKeyInput.value.trim() || DEFAULT_KEY;
 
         // 1. Today Stats
         const todayRes = await fetch('/api/v1/stats/today', { headers });
         if (todayRes.ok) {
           const today = await todayRes.json();
-          const tName = today.tenant_name || 'Personal Workspace';
+          const tName = today.tenant_name || 'Master Admin';
           document.getElementById('tenantName').innerText = tName;
           document.getElementById('userTitle').innerText = tName;
-          document.getElementById('avatarLetter').innerText = (tName[0] || 'U').toUpperCase();
+          document.getElementById('avatarLetter').innerText = (tName[0] || 'A').toUpperCase();
 
-          if (activeKeyStr) {
-            document.getElementById('cardKeyDisplay').innerText = activeKeyStr.startsWith('vel_sk_') 
-              ? `vel_sk_•••• •••• ${activeKeyStr.slice(-4)}` 
-              : `ADMIN_•••• •••• ${activeKeyStr.slice(-4)}`;
-            document.getElementById('cardKeyStatus').innerText = activeKeyStr.startsWith('vel_sk_') 
-              ? `ACTIVE • ${tName.toUpperCase()}` 
-              : 'MASTER ADMIN';
-          }
+          document.getElementById('cardKeyDisplay').innerText = activeKeyStr.startsWith('vel_sk_') 
+            ? `vel_sk_•••• •••• ${activeKeyStr.slice(-4)}` 
+            : `ADMIN_•••• •••• ${activeKeyStr.slice(-4)}`;
+          document.getElementById('cardKeyStatus').innerText = activeKeyStr.startsWith('vel_sk_') 
+            ? `ACTIVE • ${tName.toUpperCase()}` 
+            : 'MASTER ADMIN';
 
           document.getElementById('todayActiveTime').innerText = today.active_coding_formatted || '0h 0m';
           document.getElementById('todayCommits').innerText = today.commits_today;
@@ -1477,13 +1466,6 @@ print(response.json())
           document.getElementById('goalTargetLabel').innerText = `Target: ${targetGoalHours.toFixed(1)}h`;
 
           renderLanguages(today.top_languages);
-        } else {
-          document.getElementById('tenantName').innerText = 'Enter API Key in Search Bar';
-          document.getElementById('userTitle').innerText = 'Guest';
-          document.getElementById('avatarLetter').innerText = '?';
-          document.getElementById('todayStatusText').innerText = 'Enter your API Key in the search bar to view your activity.';
-          document.getElementById('cardKeyDisplay').innerText = 'NO ACTIVE KEY';
-          document.getElementById('cardKeyStatus').innerText = 'AUTHENTICATION REQUIRED';
         }
 
         // 2. Weekly Patterned Chart & Consistency calculation
@@ -1512,18 +1494,13 @@ print(response.json())
         if (feedRes.ok) {
           cachedFeedEvents = await feedRes.json();
           renderFeed(cachedFeedEvents);
-        } else {
-          document.getElementById('activityFeed').innerHTML = `
-            <div style="text-align: center; padding: 1.25rem 0.5rem; color: var(--text-muted); font-size: 0.75rem;">
-              <p style="margin-bottom: 0.35rem; font-weight: 600; color: var(--text-main);">Authentication Required</p>
-              <p style="margin-bottom: 0.65rem;">Enter your complete API Key to view live feed.</p>
-              <button class="btn-create" style="display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.4rem 0.85rem; font-size: 0.75rem;" onclick="promptApiKey()">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 2l-2 2m-1.5 1.5L10 13m-3 3l-3 3 1 1 3-3m2-2l7.5-7.5M15 7l2 2"/></svg>
-                Enter API Key
-              </button>
-            </div>
-          `;
         }
+
+        if (showAnim) showToast('Live Telemetry Refreshed');
+      } catch (err) {
+        console.error("Telemetry fetch error:", err);
+      }
+    }
 
         // Update card preview
         const currentKey = apiKeyInput.value.trim() || DEFAULT_KEY;
